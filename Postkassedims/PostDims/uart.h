@@ -6,6 +6,7 @@
 void InitUART(unsigned long BaudRate, unsigned char DataBit);
 unsigned char CharReady();
 char ReadChar();
+char ReadCharWithTimeout(int timeout);
 void SendChar(char Ch);
 void SendString(char* String);
 void SendInteger(int Number);
