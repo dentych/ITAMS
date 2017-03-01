@@ -10,6 +10,8 @@
 ***************************************************/
 #include <avr/io.h>
 #include <stdlib.h>
+#define F_CPU 3686400
+#include <util/delay.h>
 #include "uart.h"
 
 // Constants
@@ -77,6 +79,22 @@ char ReadChar()
   {}                        
   // Then return it
   return UDR;
+}
+
+char ReadCharWithTimeout(int timeout) {
+	int counter = 0;
+	while ( (UCSRA & (1<<7)) == 0)
+	{
+		if (counter < timeout) {
+			counter++;
+		} else {
+			LCDDispChar('K');
+			return 0;
+		}
+		_delay_ms(1);
+	}
+	
+	return UDR;
 }
 
 /*************************************************************************
