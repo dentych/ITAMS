@@ -24,9 +24,9 @@ int main(void)
 	
 	DDRA = 0x00;
 	
-	
-	//SendString("ATE0\r"); // fjerner echo
-	//SendString("AT+CGMI\r"); //AT+CGMI - Hvem er manufacturer?
+	InitSMS('0', '1', "3257");
+
+	//ReplySMS("22954785");
 	
 	unsigned char receivedData = 0;
 	
@@ -37,7 +37,7 @@ int main(void)
 	while (1) {
 		if ((PINA & 0b00000001) == 0) {
 			if (!bla) {
-				DeleteSMS(1);
+				DeleteAll(50);
 				bla = 1;
 			}
 		} else {
