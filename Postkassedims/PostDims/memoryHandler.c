@@ -36,7 +36,7 @@ void SaveNumber(uint8_t *number) {
 	write_eeprom_byte(1, count+1);
 }
 
-void ReadNumber(void* address) {
+void ReadNumber(void* address) { // first 2 becomes 5????
 	LCDDispChar('C');
 	
 	uint8_t receivedNum;
