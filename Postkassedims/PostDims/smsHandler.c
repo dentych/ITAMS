@@ -213,5 +213,4 @@ void InitSMS(char echo, char mode, char* pin) {
 	SetTextMode(mode);
 	WritePin(pin);
 	ConfigSMS();
-	LCDDispChar('D');
 }

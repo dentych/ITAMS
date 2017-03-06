@@ -74,6 +74,12 @@
     <Compile Include="lcd162.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="memoryHandler.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="memoryHandler.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="PostDims.c">
       <SubType>compile</SubType>
     </Compile>
