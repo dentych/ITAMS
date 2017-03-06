@@ -10,4 +10,5 @@ char ReadCharWithTimeout(int timeout);
 void SendChar(char Ch);
 void SendString(char* String);
 void SendInteger(int Number);
+void UART_Flush();
 /**************************************/

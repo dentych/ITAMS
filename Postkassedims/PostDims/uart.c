@@ -65,7 +65,7 @@ unsigned int TempUBRR;
 *************************************************************************/
 unsigned char CharReady()
 {
-   return UCSRA & (1<<7);
+   return UCSRA & (1<<RXC);
 }
 
 /*************************************************************************
@@ -82,8 +82,9 @@ char ReadChar()
 }
 
 char ReadCharWithTimeout(int timeout) {
+	LCDDispChar('V');
 	int counter = 0;
-	while ( (UCSRA & (1<<7)) == 0)
+	while ((UCSRA & (1<<RXC)) == 0)
 	{
 		if (counter < timeout) {
 			counter++;
@@ -143,6 +144,12 @@ char array[7];
   itoa(Number, array, 10);
   // - then send the string
   SendString(array);
+}
+
+void UART_Flush()
+{
+	unsigned char dummy;
+	while ( UCSRA & (1<<RXC) ) dummy = UDR;
 }
 
 /**************************************************/

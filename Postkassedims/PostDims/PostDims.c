@@ -12,9 +12,13 @@
 #include "uart.h"
 #include "lcd162.h"
 #include "smsHandler.h"
+#include "memoryHandler.h"
+#include "avr/eeprom.h"
+
 
 int main(void)
 {
+	
 	const long baud = 9600;
 	const unsigned char dbit = 8;
 	
@@ -22,26 +26,70 @@ int main(void)
 	LCDInit();
 	LCDClear();
 	
+	SetupMemory();
+	
 	DDRA = 0x00;
+
+	uint8_t SRAMstring[8] = "22954785";
+	uint8_t SRAMstring2[8] = "88888888";
+	uint8_t StoredString[8];
+	LCDDispChar('A');
+
+	
+
+
+	//eeprom_read_block((void*)&StoredString, (const void*)&NonVolatileString, 8);
+	//LCDDispString(StoredString);
+	
+	//ReadMemory(StoredString, &NonVolatileString, 8);
+
+	//LCDDispString(StoredString);
 	
 	
-	//SendString("ATE0\r"); // fjerner echo
-	//SendString("AT+CGMI\r"); //AT+CGMI - Hvem er manufacturer?
+	LCDDispChar('D');
+	
+	
+	InitSMS('0', '1', "3257");
+
+	//ReplySMS("22954785");
 	
 	unsigned char receivedData = 0;
 	
 	int newlines = 0;
 	int flag = 0;
 	int bla = 0;
+	int bla2 = 0;
+	int bla3 = 0;
 	
 	while (1) {
 		if ((PINA & 0b00000001) == 0) {
 			if (!bla) {
-				DeleteSMS(1);
+				SaveNumber("22954785");
+				//WriteMemory("22954785", NonVolatileString, 8);
+				//DeleteAll(50);
 				bla = 1;
 			}
 		} else {
 			bla = 0;
+		}
+		
+		if ((PINA & 0b00000010) == 0) {
+			if (!bla2) {
+			SaveNumber("88888888");
+			//WriteMemory(SRAMstring2, NonVolatileString, 8);
+			bla2 = 1;
+			}
+		}else {
+			bla2 = 0;
+		}
+		if ((PINA & 0b00000100) == 0) {
+			if (!bla3) {
+			ReadNumber(2);
+			//WriteMemory(SRAMstring2, NonVolatileString, 8);
+			bla3 = 1;
+			} else {
+			bla3 = 0;
+		}	
 		}
 		if (CharReady()) {
 			receivedData = ReadChar();
