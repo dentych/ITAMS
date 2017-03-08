@@ -12,53 +12,25 @@
 #define read_eeprom_array(address,value_p,length) eeprom_read_block ((void *)value_p, (const void *)address, length)
 
 void SetupMemory() {
-	
-	if(read_eeprom_byte(1) == 0xff) {
-	
-		LCDDispChar('Y');
+	if(read_eeprom_byte(1) == 0xFF) {
 		uint8_t count = 0;
 		write_eeprom_byte(1, count);
 	}
-	
-	LCDDispInteger(read_eeprom_byte(1));
 }
 
 void SaveNumber(uint8_t *number) {
-	
-	LCDDispChar('W');
-	
-	uint8_t count = read_eeprom_byte(1); //get amount of telephone numbers
-	
-	LCDDispInteger(count);
+	uint8_t count = ReadAmountOfNumbersSaved();
 	
 	write_eeprom_array(2+(count*8), number, 8);
 	
 	write_eeprom_byte(1, count+1);
 }
 
-void ReadNumber(void* address) { // first 2 becomes 5????
-	LCDDispChar('C');
-	
-	uint8_t receivedNum;
-	
-	read_eeprom_array(address, receivedNum ,8);
-	
-	LCDDispString(receivedNum);
-	LCDDispChar('E');
+void ReadNumber(void* address, uint8_t *receivedNum) {
+	uint8_t count = ReadAmountOfNumbersSaved();
+	read_eeprom_array(address, receivedNum, 8);
 }
 
-
-
-//void WriteMemory(uint8_t *str, size_t length) {
-	//LCDDispChar('W');
-	//write_eeprom_array(str, adress, length);
-	////eeprom_write_block((const void*)str, (void*)&address, length);
-//}
-//
-//void ReadMemory(uint8_t* storedString, void* address, size_t length) {
-	//LCDDispChar('R');
-	//read_eeprom_array(storedString, address, length);
-	////eeprom_read_block((void*) storedString, (const void*)&address, length);
-//}
-
-
+uint8_t ReadAmountOfNumbersSaved() {
+	return read_eeprom_byte(1);
+}

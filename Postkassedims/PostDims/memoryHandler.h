@@ -12,10 +12,9 @@
 #define MEMORYHANDLER_H_
 
 //  Public:
-void WriteMemory(uint8_t *str, void* address, size_t length);
-void ReadMemory(uint8_t *storedString, void* address, size_t length);
 void SetupMemory();
 void SaveNumber(uint8_t *number);
+void ReadNumber(void* address, uint8_t *receivedNum);
 //------------------------------------------------
 
 

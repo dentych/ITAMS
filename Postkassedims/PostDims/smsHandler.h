@@ -20,10 +20,6 @@ void WritePin(char* pin);
 void SetEcho(char echo);
 void SetTextMode(char mode);
 void InitSMS(char echo, char mode, char* pin);
-
 //------------------------------------------------
-
-
-
 
 #endif /* SMSHANDLER_H_ */
