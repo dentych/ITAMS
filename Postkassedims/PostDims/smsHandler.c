@@ -47,34 +47,12 @@ void ReadSMS(char index, char *header, char *body) {
 	ReadChar();
 	ReadChar();
 	
-	char received = 0;
-	char previous = 0;
 	
 	// Read header
-	for (int i = 0; i < MAX_SIZE; i++) {
-		received = ReadChar();
-		if (received != CR && received != LF) {
-			header[i] = received;
-		}
-		if (previous == CR && received == LF) {
-			break;
-		}
-		previous = received;
-	}
+	ReadLine(header, MAX_SIZE);
 	
 	// Read body
-	received = 0;
-	previous = 0;
-	for (int i = 0; i < MAX_SIZE; i++) {
-		received = ReadChar();
-		if (received != CR && received != LF) {
-			body[i] = received;
-		}
-		if (previous == CR && received == LF) {
-			break;
-		}
-		previous = received;
-	}
+	ReadLine(body, MAX_SIZE);
 	
 	WaitforResponse();
 }
@@ -193,5 +171,21 @@ void ExtractNumber(char *header, char *number) {
 	}
 	for (int i = 0; i < 8; i++, counter++) {
 		number[i] = header[counter];
+	}
+}
+
+void ReadLine(char *output, char size) {
+	char received = 0;
+	char previous = 0;
+	
+	for (int i = 0; i < size; i++) {
+		received = ReadChar();
+		if (received != CR && received != LF) {
+			output[i] = received;
+		}
+		if (previous == CR && received == LF) {
+			break;
+		}
+		previous = received;
 	}
 }
