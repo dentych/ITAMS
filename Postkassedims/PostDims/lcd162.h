@@ -21,6 +21,9 @@
 
 // Defining the used PORT:
 // (here PORTC is used) :
+#ifndef _LCD162_H_
+#define _LCD162_H_
+
 #define DDR_lcd	 DDRC
 #define PIN_lcd	 PINC
 #define PORT_lcd PORTC 
@@ -39,3 +42,5 @@ void LCDCursorRight();
 void LCDShiftLeft();
 void LCDShiftRight();
 //----------------------------------------------------------------------
+
+#endif /* LCD162_H_ */
