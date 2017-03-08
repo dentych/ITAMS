@@ -13,6 +13,7 @@
 #define F_CPU 3686400
 #include <util/delay.h>
 #include "uart.h"
+#include "lcd162.h"
 
 // Constants
 #define XTAL 3686400  

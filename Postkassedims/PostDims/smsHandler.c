@@ -5,9 +5,11 @@
 *  Author: aen
 */
 
-#include "smsHandler.h"
 #define F_CPU 3868400
 #include <util/delay.h>
+#include "smsHandler.h"
+#include "uart.h"
+#include "lcd162.h"
 
 void ReadSMS()
 {
