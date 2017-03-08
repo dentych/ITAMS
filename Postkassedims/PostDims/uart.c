@@ -13,7 +13,6 @@
 #define F_CPU 3686400
 #include <util/delay.h>
 #include "uart.h"
-#include "lcd162.h"
 
 // Constants
 #define XTAL 3686400  
@@ -83,14 +82,12 @@ char ReadChar()
 }
 
 char ReadCharWithTimeout(int timeout) {
-	LCDDispChar('V');
 	int counter = 0;
 	while ((UCSRA & (1<<RXC)) == 0)
 	{
 		if (counter < timeout) {
 			counter++;
 		} else {
-			LCDDispChar('K');
 			return 0;
 		}
 		_delay_ms(1);

@@ -22,10 +22,10 @@ void DeleteAndMove(uint8_t indexNumberToDelete, uint8_t amountOfNumbers);
 void SetupMemory() {
 	uint8_t count = ReadAmountOfNumbersSaved();
 	
-	//if(count == 0xFF) {
-	count = 0;
-	write_eeprom_byte(1, count);
-	//}
+	if(count == 0xFF) {
+		count = 0;
+		write_eeprom_byte(1, count);
+	}
 }
 
 void SaveNumber(uint8_t *number) {

@@ -12,47 +12,48 @@
 #include <stdio.h>
 #include <avr/cpufunc.h>
 #include "memoryHandler.h"
+#include "smsHandler.h"
+#include "uart.h"
 
+#define DDR_switch DDRA
+#define PIN_switch PINA
+#define DDR_led DDRB
+#define PORT_led PORTB
 int main(void)
 {
+	DDR_switch = 0x00;
+	DDR_led = 0xFF;
+	PORT_led = 0xFF;
 	SetupMemory();
+	InitUART(9600, 8);
+	InitSMS('0', '1', "3257");
+	DeleteAll(20);
 	
-	DDRA = 0x00;
-	
-	SaveNumber("11111111");
-	SaveNumber("11111111");
-	SaveNumber("11111111");
-	SaveNumber("11111111");
-	SaveNumber("11111111");
-	SaveNumber("22954785");
-	SaveNumber("11111111");
-	SaveNumber("11111111");
-	SaveNumber("11111111");
-	SaveNumber("41408359");
+	char receivedChar = 0;
+	char header[100] = {0};
+	char body[100] = {0};
 	
 	while (1) {
-		if ((PINA & 0b00000001) == 0) {
-			uint8_t *number = "22954785";
-			SaveNumber(number);
+		receivedChar = ReadChar();
+		
+		if(receivedChar == '+') {
+			while (ReadChar() != ',') {
+			}
+			char index = ReadChar();
+			ReadChar();
+			ReadChar();
+			ReadSMS(index, header, body);
+			char number[8];
+			ExtractNumber(header, number);
+			ReplySMS(number, body, 100);
 		}
-		else if ((PINA & (1<<1)) == 0) {
-			uint8_t *number = "41408359";
-			SaveNumber(number);
-		}
-		else if ((PINA & (1<<2)) == 0) {
-			uint8_t number[8];
-			ReadNumber(6, number);
-			_NOP();
-		}
-		else if ((PINA & (1<<3)) == 0) {
-			DeleteNumber("22954785");
-		}
-		else if ((PINA & (1<<4)) == 0) {
-			uint8_t number[8];
-			ReadNumber(2, number);
-			_NOP();
+		
+		if ((PIN_switch & 0b00000001) == 0) {
+			break;
 		}
 	}
+	
+	_NOP();
 	
 	while (1);
 }

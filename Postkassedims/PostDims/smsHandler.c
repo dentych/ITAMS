@@ -7,124 +7,91 @@
 
 #define F_CPU 3868400
 #include <util/delay.h>
+#include <string.h>
 #include "smsHandler.h"
 #include "uart.h"
 #include "lcd162.h"
 
-void ReadSMS()
-{
-	while (ReadChar() != ',')
-	{
-	}
-	
-	char received = 0;
+const char CR = 13;
+const char LF = 10;
+const char MAX_SIZE = 100;
 
-	while ((received = ReadChar()) != '\r')
-	{
-		LCDDispChar(received); //write number to lcd
-	}
-	
-	SendString("AT+CMGR=");
-	SendInteger(received);
-	SendString("\r");
-	
-	while (ReadChar() != '+')
-	{
-	}
-	
-	int commaCount = 0;
-	while (commaCount < 1)
-	{
-		while (ReadChar() != ',')
-		{
-		}
-		commaCount++;
-	}
-	received = ReadChar();
-	received = ReadChar();
-	
-	if(received == '+')
-	{
-		ReadChar();
-		ReadChar();
-	}
-	
-	char number[8] = "";
-
-	for(int i = 0; i <8; i++)
-	{
-		number[i] = ReadChar();
-		//LCDDispChar(number[i]); //write received to lcd
-	}
-	
-	WaitforResponse();
-	
-	ReplySMS(number);
-}
-
-void ReplySMS(char* number) {
-	//+CMGR: "REC UNREAD","+4522954785",,"17/03/01,14:38:36+04"
-	char received = 0;
-	
-	//LCDDispString(number);
-	
+void SendSMS(char *number, SMSType type) {
 	SendString("AT+CMGS=");
 	SendString(number);
 	SendChar('\r');
-	
-	while ((received = ReadCharWithTimeout(5000)) != '>') {
-		if (received != '\r' && received != '\n') {
-			LCDDispChar(received);
-		}
+	while (ReadCharWithTimeout(5000) != '>') {
 	}
-	
-	LCDDispChar(received);
-	
-	SendString("Hello!");
+	if (type == SUBSCRIBED) {
+		SendString("You subscribed to mail notifications!");
+	} 
+	else if (type == UNSUBSCRIBED) {
+		SendString("You unsubscribed from mail notifications...");
+	}
+	else if (type == UNKNOWN_COMMAND) {
+		SendString("Command not understood. Please send SUBSCRIBE or UNSUBSCRIBE");
+	}
+	else if (type == NEW_MAIL) {
+		SendString("New mail just arrived!");
+	}
 	SendChar(0x1A);
-	LCDDispChar('A');
 	
-	// HAX
-	
-	char * errorMsg = "ERROR";
-	int pointer = 0;
-	char previous;
-	
-	while ((received = ReadChar()) != 0)
-	{
-		if (received != '\r' && received != '\n') {
-			LCDDispChar(received);
-		}
-		if (previous == 'O' && received == 'K')
-		{
-			ReadChar();
-			ReadChar();
-			break;
-		} else {
-			previous = received;
-		}
-		
-		if (received == errorMsg[pointer]) {
-			pointer++;
-		} else {
-			pointer = 0;
-		}
-		
-		if (pointer >= 5) {
-			ReadChar();
-			ReadChar();
-			break;
-		}
-	}
-	
-	_delay_ms(150);
-	
-	// END HAX
-	
-	
-	LCDDispChar('B');
+	WaitforResponse();
 }
 
+void ReadSMS(char index, char *header, char *body) {	
+	SendString("AT+CMGR=");
+	SendChar(index);
+	SendString("\r");
+	
+	ReadChar();
+	ReadChar();
+	
+	char received = 0;
+	char previous = 0;
+	
+	// Read header
+	for (int i = 0; i < MAX_SIZE; i++) {
+		received = ReadChar();
+		if (received != CR && received != LF) {
+			header[i] = received;
+		}
+		if (previous == CR && received == LF) {
+			break;
+		}
+		previous = received;
+	}
+	
+	// Read body
+	received = 0;
+	previous = 0;
+	for (int i = 0; i < MAX_SIZE; i++) {
+		received = ReadChar();
+		if (received != CR && received != LF) {
+			body[i] = received;
+		}
+		if (previous == CR && received == LF) {
+			break;
+		}
+		previous = received;
+	}
+	
+	WaitforResponse();
+}
+
+void ReplySMS(char* number, char *body, char bodySize) {
+	char received = 0;
+	
+	if (strcmp("SUBSCRIBE", body) == 0) {
+		SendSMS(number, SUBSCRIBED);
+	}
+	else if (strcmp("UNSUBSCRIBE", body) == 0) {
+		SendSMS(number, UNSUBSCRIBED);
+	}
+	else {
+		SendSMS(number, UNKNOWN_COMMAND);
+	}
+}
 
 void DeleteSMS(int index) {
 	
@@ -149,13 +116,13 @@ void WaitforResponse() {
 			ReadChar();
 			ReadChar();
 			break;
-		} else {
+			} else {
 			previous = received;
 		}
 		
 		if (received == errorMsg[pointer]) {
 			pointer++;
-		} else {
+			} else {
 			pointer = 0;
 		}
 		
@@ -178,14 +145,12 @@ void WritePin(char* pin) {
 }
 
 void SetEcho(char echo) {
-	
 	SendString("ATE");
 	SendChar(echo);
 	SendChar('\r');
 	
 	WaitforResponse();
 }
-
 
 void SetTextMode(char mode){
 	
@@ -215,4 +180,18 @@ void InitSMS(char echo, char mode, char* pin) {
 	SetTextMode(mode);
 	WritePin(pin);
 	ConfigSMS();
+}
+
+void ExtractNumber(char *header, char *number) {
+	char counter = 0;
+	while (header[counter] != ',') {
+		counter++;
+	}
+	counter = counter + 2;
+	if (header[counter] == '+') {
+		counter = counter + 3;
+	}
+	for (int i = 0; i < 8; i++, counter++) {
+		number[i] = header[counter];
+	}
 }
