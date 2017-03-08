@@ -24,7 +24,7 @@ void SendSMS(char *number, SMSType type) {
 	}
 	if (type == SUBSCRIBED) {
 		SendString("You subscribed to mail notifications!");
-	} 
+	}
 	else if (type == UNSUBSCRIBED) {
 		SendString("You unsubscribed from mail notifications...");
 	}
@@ -39,14 +39,13 @@ void SendSMS(char *number, SMSType type) {
 	WaitforResponse();
 }
 
-void ReadSMS(char index, char *header, char *body) {	
+void ReadSMS(char index, char *header, char *body) {
 	SendString("AT+CMGR=");
 	SendChar(index);
 	SendString("\r");
 	
 	ReadChar();
 	ReadChar();
-	
 	
 	// Read header
 	ReadLine(header, MAX_SIZE);
@@ -72,7 +71,6 @@ void ReplySMS(char* number, char *body, char bodySize) {
 }
 
 void DeleteSMS(int index) {
-	
 	SendString("AT+CMGD=");
 	SendInteger(index);
 	SendString("\r");
@@ -81,7 +79,6 @@ void DeleteSMS(int index) {
 }
 
 void WaitforResponse() {
-	
 	char * errorMsg = "ERROR";
 	int pointer = 0;
 	char received;
@@ -146,11 +143,9 @@ void DeleteAll(int spaces) {
 }
 
 void ConfigSMS() {
-	
 	SendString("AT+CNMI=3,1\r");
 	
 	WaitforResponse();
-	
 }
 
 void InitSMS(char echo, char mode, char* pin) {
