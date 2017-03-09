@@ -10,7 +10,5 @@
 #define ADC_H_
 
 void InitADC();
-int ReadADC();
-void TestADC();
 
 #endif /* ADC_H_ */
