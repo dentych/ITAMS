@@ -10,6 +10,7 @@
 #define F_CPU 3868400
 #include <util/delay.h>
 #include <avr/cpufunc.h>
+#include <avr/interrupt.h>
 #include <stdio.h>
 #include <string.h>
 #include "memoryHandler.h"
@@ -17,6 +18,7 @@
 #include "smsHandler.h"
 #include "uart.h"
 #include "phonenumber.h"
+#include "ADC.h"
 
 #define DDR_switch DDRA
 #define PIN_switch PINA
@@ -31,18 +33,31 @@ char receivedChar = 0;
 char header[100] = {0};
 char body[100] = {0};
 
+char adcData = 0xFF;
+
 phonenumber numbers[10];
 char phoneNumberCounter = 0;
+
+char mailCounter = 0;
+
+ISR(ADC_vect) {
+	adcData = ADCH;
+	
+	StartADC();
+}
+
+void TurnOffStatusLEDS();
 
 int main(void)
 {
 	// PRODUCTION  --v
-	DDR_switch = 0x00;
 	DDR_led = 0xFF;
+	DDRA &= 0b11110011;
 	PORT_led = 0xFF;
 	SetupMemory();
 	PORT_led &= ~(1<<0);
 	InitUART(9600, 8);
+	InitADC();
 	PORT_led &= ~(1<<1);
 	InitSMS('0', '1', "3257");
 	PORT_led &= ~(1<<2);
@@ -50,28 +65,47 @@ int main(void)
 	PORT_led &= ~(1<<3);
 	
 	LoadAllNumbersFromEEPROM(numbers, &phoneNumberCounter);
-
+	PORT_led &= ~(1<<4);
+	
 	while (1) {
+		if (adcData < 30) {
+			TurnOffStatusLEDS();
+			PORT_led &= ~(1<<7);
+			SendSMSToAll(numbers, phoneNumberCounter);
+			mailCounter++;
+			PORT_led &= ~(1<<6);
+		}
+		
+		if ((PINA & (1<<2)) == 0) {
+			TurnOffStatusLEDS();
+			mailCounter = 0;
+			PORT_led &= ~(1<<6);
+		}
+		
+		if (!CharReady()) {
+			continue;
+		}
+		
 		receivedChar = ReadChar();
 		
 		if(receivedChar == '+') {
-			PORT_led |= ((1<<4) | (1<<5) | (1<<6));
+			TurnOffStatusLEDS();
+			PORT_led &= ~(1<<5);
 			while (ReadChar() != ',') {
 			}
 			char index = ReadChar();
 			// Read CR and LF after index
 			ReadChar();
 			ReadChar();
-			PORT_led &= ~(1<<4);
 			ReadSMS(index, header, body);
 			DeleteSMS(index);
-			PORT_led &= ~(1<<5);
+			PORT_led &= ~(1<<6);
 			char number[9];
 			ExtractNumber(header, number);
 			UART_Flush();
 			SMSType type = ParseBody(number, body, 100);
-			SendSMS(number, type);
-			PORT_led &= ~(1<<6);
+			SendSMS(number, type, mailCounter);
+			PORT_led &= ~(1<<7);
 
 			// Handle local memory (subscribe/unsubscribe
 			HandleMemoryFromType(type, number);
@@ -79,10 +113,6 @@ int main(void)
 			// Empty header and body
 			FlushArray(header, 100);
 			FlushArray(body, 100);
-		}
-		
-		if ((PIN_switch & 0b00000001) == 0) {
-			break;
 		}
 	}
 	
@@ -138,3 +168,6 @@ void HandleMemoryFromType(SMSType type, char *number) {
 	}
 }
 
+void TurnOffStatusLEDS() {
+	PORT_led |= ((1<<5) | (1<<6) | (1<<7));
+}

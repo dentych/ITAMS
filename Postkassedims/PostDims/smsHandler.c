@@ -9,6 +9,8 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "smsHandler.h"
 #include "uart.h"
@@ -19,7 +21,7 @@ const char LF = 10;
 const char CTRL_Z = 26;
 const char MAX_SIZE = 100;
 
-void SendSMS(char *number, SMSType type) {
+void SendSMS(char *number, SMSType type, char mailCounter) {
 	char tmp[100] = {0};
 	char counter = 0;
 	SendString("AT+CMGS=");
@@ -45,13 +47,22 @@ void SendSMS(char *number, SMSType type) {
 		SendString("Command not understood. Please send SUBSCRIBE or UNSUBSCRIBE.\nWrite HELP for further information.");
 	}
 	else if (type == NEW_MAIL) {
-		SendString("New mail just arrived!");
+		SendString("You got mail!");
 	}
 	else if (type == HELP) {
 		SendString("SUBSCRIBE: Get notifications.\nUNSUBSCRIBE: Stop getting notifications.\nSTATUS: If there is currently mail.");
 	}
 	else if (type == STATUS) {
-		SendString("Maybe there is mail.");
+		char str[] = "New mail: ";
+		char msg[14] = {0};
+		strncpy(msg, str, 10);
+		char number[3];
+		itoa(mailCounter, number, 10);
+		char j = 0;
+		for (char i= 10; i < 13; i++, j++) {
+			msg[i] = number[j];
+		}
+		SendString(msg);
 	}
 	else if (type == NUMBERS_FULL) {
 		SendString("No more numbers can be subscribed.");
@@ -178,6 +189,12 @@ void ExtractNumber(char *header, char *number) {
 		number[i] = header[counter];
 	}
 	number[8] = 0;
+}
+
+void SendSMSToAll(phonenumber *numbers, char phoneNumberCount) {
+	for (int i = 0; i < phoneNumberCount; i++) {
+		SendSMS(numbers[i].number, NEW_MAIL, 0);
+	}
 }
 
 void ReadLine(char *output, char size) {
