@@ -6,6 +6,8 @@
 */
 
 #define F_CPU 3868400
+
+#include <avr/io.h>
 #include <util/delay.h>
 #include <string.h>
 #include "smsHandler.h"
@@ -14,27 +16,47 @@
 
 const char CR = 13;
 const char LF = 10;
+const char CTRL_Z = 26;
 const char MAX_SIZE = 100;
 
 void SendSMS(char *number, SMSType type) {
+	char tmp[100] = {0};
+	char counter = 0;
 	SendString("AT+CMGS=");
 	SendString(number);
-	SendChar('\r');
-	while (ReadCharWithTimeout(5000) != '>') {
+	SendChar(CR);
+	while (ReadChar() != '>') {
+		
 	}
+	_delay_ms(200);
 	if (type == SUBSCRIBED) {
 		SendString("You subscribed to mail notifications!");
+	}
+	else if (type == ALREADY_SUBSCRIBED) {
+		SendString("You are already subscribed");
 	}
 	else if (type == UNSUBSCRIBED) {
 		SendString("You unsubscribed from mail notifications...");
 	}
+	else if (type == NOT_SUBSCRIBED) {
+		SendString("You are not subscribed...");
+	}
 	else if (type == UNKNOWN_COMMAND) {
-		SendString("Command not understood. Please send SUBSCRIBE or UNSUBSCRIBE");
+		SendString("Command not understood. Please send SUBSCRIBE or UNSUBSCRIBE.\nWrite HELP for further information.");
 	}
 	else if (type == NEW_MAIL) {
 		SendString("New mail just arrived!");
 	}
-	SendChar(0x1A);
+	else if (type == HELP) {
+		SendString("SUBSCRIBE: Get notifications.\nUNSUBSCRIBE: Stop getting notifications.\nSTATUS: If there is currently mail.");
+	}
+	else if (type == STATUS) {
+		SendString("Maybe there is mail.");
+	}
+	else if (type == NUMBERS_FULL) {
+		SendString("No more numbers can be subscribed.");
+	}
+	SendChar(CTRL_Z);
 	
 	WaitforResponse();
 }
@@ -54,20 +76,6 @@ void ReadSMS(char index, char *header, char *body) {
 	ReadLine(body, MAX_SIZE);
 	
 	WaitforResponse();
-}
-
-void ReplySMS(char* number, char *body, char bodySize) {
-	char received = 0;
-	
-	if (strcmp("SUBSCRIBE", body) == 0) {
-		SendSMS(number, SUBSCRIBED);
-	}
-	else if (strcmp("UNSUBSCRIBE", body) == 0) {
-		SendSMS(number, UNSUBSCRIBED);
-	}
-	else {
-		SendSMS(number, UNKNOWN_COMMAND);
-	}
 }
 
 void DeleteSMS(int index) {
@@ -91,13 +99,15 @@ void WaitforResponse() {
 			ReadChar();
 			ReadChar();
 			break;
-			} else {
+		}
+		else {
 			previous = received;
 		}
 		
 		if (received == errorMsg[pointer]) {
 			pointer++;
-			} else {
+		}
+		else {
 			pointer = 0;
 		}
 		
@@ -108,7 +118,7 @@ void WaitforResponse() {
 		}
 	}
 	
-	_delay_ms(150);
+	_delay_ms(200);
 }
 
 void WritePin(char* pin) {
@@ -167,6 +177,7 @@ void ExtractNumber(char *header, char *number) {
 	for (int i = 0; i < 8; i++, counter++) {
 		number[i] = header[counter];
 	}
+	number[8] = 0;
 }
 
 void ReadLine(char *output, char size) {

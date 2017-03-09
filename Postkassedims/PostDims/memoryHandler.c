@@ -6,6 +6,7 @@
 */
 #include <avr/eeprom.h>
 #include "memoryHandler.h"
+#include "localMemoryHandler.h"
 
 #define write_eeprom_byte(address,value) eeprom_write_byte((uint8_t*)address,(uint8_t)value)
 #define write_eeprom_array(address,value_p,length) eeprom_write_block((const void *) value_p, (void *) address, length)
@@ -39,6 +40,7 @@ void SaveNumber(uint8_t *number) {
 void ReadNumber(uint8_t count, uint8_t *receivedNum) {
 	uint8_t address = CalculateAddress(count);
 	read_eeprom_array(address, receivedNum, 8);
+	receivedNum[8] = 0;
 }
 
 void DeleteNumber(uint8_t *numberToDelete) {
@@ -88,4 +90,15 @@ void DeleteAndMove(uint8_t indexNumberToDelete, uint8_t amountOfNumbers) {
 	update_eeprom_array(addressOfNumberToDelete, number, 8);
 	uint8_t array[8] = {0xFF};
 	update_eeprom_array(addressOfLastNumber, array, 8);
+}
+
+void LoadAllNumbersFromEEPROM(phonenumber *numbers, char *phoneNumberCounter) {
+	char numbersSaved = ReadAmountOfNumbersSaved();
+	
+	for (int i = 1; (i <= numbersSaved) && (i <= 10); i++) {
+		char number[9];
+		ReadNumber(i, number);
+		number[8] = 0;
+		SaveNumberInLocalMemory(numbers, number, phoneNumberCounter);
+	}
 }

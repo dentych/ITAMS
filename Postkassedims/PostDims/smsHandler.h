@@ -12,15 +12,19 @@
 //  Public:
 enum SMSType {
 	SUBSCRIBED,
+	ALREADY_SUBSCRIBED,
 	UNSUBSCRIBED,
+	NOT_SUBSCRIBED,
 	UNKNOWN_COMMAND,
-	NEW_MAIL
+	NEW_MAIL,
+	HELP,
+	STATUS,
+	NUMBERS_FULL
 };
 typedef enum SMSType SMSType;
 
 void SendSMS(char *number, SMSType type);
 void ReadSMS(char index, char *header, char *body);
-void ReplySMS(char* number, char *body, char bodySize);
 void DeleteSMS(int index);
 void DeleteAll(int spaces);
 void WaitforResponse();
